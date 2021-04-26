@@ -1,0 +1,22 @@
+language: generic
+dist: focal
+os: linux
+services:
+  - docker
+
+before_install:
+  - docker build -t ruslaniv/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ruslaniv/react-test npm test
+
+after_success:
+  - docker build -t ruslaniv/multi-docker-client ./client
+  - docker build -t ruslaniv/multi-docker-nginx ./nginx
+  - docker build -t ruslaniv/multi-docker-server ./server
+  - docker build -t ruslaniv/multi-docker-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_NAME" --password-stdin
+  - docker push ruslaniv/multi-docker-client
+  - docker push ruslaniv/multi-docker-nginx
+  - docker push ruslaniv/multi-docker-server
+  - docker push ruslaniv/multi-docker-worker
